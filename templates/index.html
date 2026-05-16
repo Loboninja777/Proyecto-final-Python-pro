@@ -40,6 +40,10 @@
     </div>
 
     <script>
+
+        let weatherChart = null;
+
+
         async function buscarClima() {
             const city = document.getElementById('cityInput').value;
             const resultBox = document.getElementById('resultBox');
@@ -62,6 +66,60 @@
                 const data = await response.json();
 
                 if (response.ok) {
+                    // ============================
+// CHART.JS
+// ============================
+
+const labels =
+    data.weather.labels_temperature;
+
+const values =
+    data.weather.values_temperature;
+
+const ctx =
+    document.getElementById(
+        'weatherChartTemperature'
+    );
+
+// destruir gráfico anterior
+if (weatherChart) {
+    weatherChart.destroy();
+}
+
+weatherChart = new Chart(ctx, {
+
+    type: 'line',
+
+    data: {
+
+        labels: labels,
+
+        datasets: [
+
+            {
+                label: 'Temperatura °C',
+
+                data: values,
+
+                borderWidth: 2,
+
+                tension: 0.3
+            }
+        ]
+    },
+
+    options: {
+
+        responsive: true,
+
+        scales: {
+
+            y: {
+                beginAtZero: false
+            }
+        }
+    }
+});
                     // Actualizamos los valores en el HTML
                     document.getElementById('temp').innerText = data.weather.temperature;
                     document.getElementById('precipitation').innerText = data.weather.precipitation;
@@ -99,36 +157,7 @@
         }
     </script>
     
-    <script>
 
-        // Datos enviados por Flask/Jinja
-        const labels_temperature = {{ labels_temperature | tojson }};
-        const values_temperature = {{ values_temperature | tojson }};
 
-        // Canvas
-        const ctx = document.getElementById('weatherChartTemperature');
-
-        // Crear gráfico
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels_temperature,
-                datasets: [{
-                    label: 'Temperatura',
-                    data: values_temperature,
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
-
-    </script>
 </body>
 </html>

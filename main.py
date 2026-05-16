@@ -3,8 +3,7 @@ from flask import Flask, render_template, request, jsonify, url_for
 import requests
 from gtts import gTTS
 import os
-import pandas as pd
-import responses
+
 
 # AGREGAR GRAFICACIÓN DE DATOS CLIMÁTICOS CON CHART.JS (JavaScript) O MATPLOTLIB (Python) DEPENDE CUAL SEA MÁS CÓMODO
 
@@ -34,61 +33,87 @@ def geolocalizacion(city):
 
 
 def weatherreport(lat, lon):
+
     url = "https://api.open-meteo.com/v1/forecast"
+
     params = {
+
         "latitude": lat,
         "longitude": lon,
-        "hourly": "temperature_2m,precipitation,surface_pressure",
+
+        "hourly": [
+            "temperature_2m",
+            "precipitation",
+            "surface_pressure"
+        ],
+
         "forecast_days": 1,
-        "timezone": "auto",
+
+        "timezone": "auto"
     }
+
     try:
-        response = requests.get(url, params=params, timeout=5)
-        response.raise_for_status()
-        data = response.json()
-        hourly = data.get("hourly", {})
-        times = hourly.get("time", [])
-        response = responses[0]
-        # Process hourly data. The order of variables needs to be the same as requested.
-        hourly = response.Hourly()
-        hourly_temperature_2m = hourly.Variables(0).ValuesAsNumpy()
-        hourly_precipitation = hourly.Variables(1).ValuesAsNumpy()
-        hourly_surface_pressure = hourly.Variables(2).ValuesAsNumpy()
 
-        hourly_data = {
-        "date": pd.date_range(
-            start = pd.to_datetime(hourly.Time(), unit = "s", utc = True),
-            end =  pd.to_datetime(hourly.TimeEnd(), unit = "s", utc = True),
-            freq = pd.Timedelta(seconds = hourly.Interval()),
-            inclusive = "left"
+        response = requests.get(
+            url,
+            params=params,
+            timeout=5
         )
-    }
-        
-        hourly_data["temperature_2m"] = hourly_temperature_2m
-        hourly_data["precipitation"] = hourly_precipitation
-        hourly_data["surface_pressure"] = hourly_surface_pressure
-        hourly_dataframe = pd.DataFrame(data = hourly_data)
-        print("\nHourly data\n", hourly_dataframe)
 
-        
+        response.raise_for_status()
+
+        data = response.json()
+
+        hourly = data.get("hourly", {})
+
+        times = hourly.get("time", [])
 
         if not times:
             return None
 
+        # labels de horas
+        labels = []
+
+        for t in times:
+
+            hora = t.split("T")[1]
+
+            labels.append(hora)
+
         return {
-            "temperature": hourly.get("temperature_2m", [None])[0],
-            "precipitation": hourly.get("precipitation", [None])[0],
-            "pressure": hourly.get("surface_pressure", [None])[0],
-            "labels_temperature": [pd.to_datetime(t, unit="s").strftime("%H:%M") for t in times],
-            "values_temperature": hourly.get("temperature_2m", []),
-            "labels_precipitation": [pd.to_datetime(t, unit="s").strftime("%H:%M") for t in times],
-            "values_precipitation": hourly.get("precipitation", []),
-            "labels_pressure": [pd.to_datetime(t, unit="s").strftime("%H:%M") for t in times],
-            "values_pressure": hourly.get("surface_pressure", [])
+
+            "temperature":
+                hourly.get("temperature_2m", [None])[0],
+
+            "precipitation":
+                hourly.get("precipitation", [None])[0],
+
+            "pressure":
+                hourly.get("surface_pressure", [None])[0],
+
+            "labels_temperature":
+                labels,
+
+            "values_temperature":
+                hourly.get("temperature_2m", []),
+
+            "labels_precipitation":
+                labels,
+
+            "values_precipitation":
+                hourly.get("precipitation", []),
+
+            "labels_pressure":
+                labels,
+
+            "values_pressure":
+                hourly.get("surface_pressure", [])
         }
 
     except Exception as e:
+
         print(f"Error en weatherreport: {e}")
+
         return None
 
 

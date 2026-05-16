@@ -1,0 +1,6 @@
+Flask==2.2.5
+requests==2.31.0
+gTTS==2.4.8
+numpy==1.27.4
+# Optional: install playsound or simpleaudio if you need local playback
+# playsound==1.3.0

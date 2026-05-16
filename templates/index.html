@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Weather App AJAX</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f2f6ff; display: flex; flex-direction: column; align-items: center; padding-top: 40px; }
+        .container { background: white; padding: 20px 30px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 350px; margin-bottom: 20px; }
+        .weather-box { background: #eef4ff; padding: 15px; border-radius: 8px; margin-top: 15px; display: none; }
+        .error { color: red; margin-top: 10px; display: none; }
+        .loading { font-style: italic; color: gray; display: none; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Clima</h1>
+        <div style="display: flex; gap: 10px;">
+            <input type="text" id="cityInput" placeholder="Ingresa una ciudad">
+            <button onclick="buscarClima()">Buscar</button>
+        </div>
+        
+        <p id="weatherLoading" class="loading">Buscando...</p>
+        <div id="weatherError" class="error"></div>
+
+        <div id="resultBox" class="weather-box">
+            <p><strong>Temperatura:</strong> <span id="temp"></span> °C</p>
+            <canvas id="weatherChartTemperature" style="max-width: 200px; height: 200px;"></canvas>
+            <p><strong>Precipitación:</strong> <span id="precipitation"></span> mm</p>
+            <p><strong>Presión:</strong> <span id="pressure"></span> hPa</p>
+            
+            <audio id="weatherAudio" controls style="width: 100%; margin-top: 10px;"></audio>
+        </div>
+    </div>
+
+    <div class="container">
+        <button onclick="obtenerDatoCurioso()">Obtener Dato Curioso</button>
+        <p id="factText" style="margin-top: 15px; font-style: italic;"></p>
+    </div>
+
+    <script>
+        async function buscarClima() {
+            const city = document.getElementById('cityInput').value;
+            const resultBox = document.getElementById('resultBox');
+            const errorBox = document.getElementById('weatherError');
+            const loader = document.getElementById('weatherLoading');
+
+            if (!city) return;
+
+            loader.style.display = 'block';
+            errorBox.style.display = 'none';
+            resultBox.style.display = 'none';
+
+            try {
+                const response = await fetch('/get_weather', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ city: city })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Actualizamos los valores en el HTML
+                    document.getElementById('temp').innerText = data.weather.temperature;
+                    document.getElementById('precipitation').innerText = data.weather.precipitation;
+                    document.getElementById('pressure').innerText = data.weather.pressure;
+
+                    const audio = document.getElementById('weatherAudio');
+                    if (data.audio_file) {
+                        audio.src = data.audio_file + '?t=' + new Date().getTime();
+                    }
+                    
+                    resultBox.style.display = 'block';
+                } else {
+                    errorBox.innerText = data.error || "Error desconocido";
+                    errorBox.style.display = 'block';
+                }
+            } catch (e) {
+                console.error("Detalle del error:", e);
+                errorBox.innerText = "Error procesando la solicitud";
+                errorBox.style.display = 'block';
+            } finally {
+                loader.style.display = 'none';
+            }
+        }
+
+        async function obtenerDatoCurioso() {
+            const factText = document.getElementById('factText');
+            factText.innerText = "Cargando...";
+            try {
+                const response = await fetch('/get_fact');
+                const data = await response.json();
+                factText.innerText = data.fact || data.error;
+            } catch (e) {
+                factText.innerText = "Error al cargar el dato curioso.";
+            }
+        }
+    </script>
+    
+        <script>
+
+        // Datos enviados por Flask/Jinja
+        const labels = {{ labels | tojson }};
+        const values = {{ values | tojson }};
+
+        // Canvas
+        const ctx = document.getElementById('weatherChartTemperature');
+
+        // Crear gráfico
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Ventas',
+                    data: values,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+    </script>
+</body>
+</html>

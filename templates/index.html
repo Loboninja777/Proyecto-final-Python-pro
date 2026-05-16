@@ -99,11 +99,11 @@
         }
     </script>
     
-        <script>
+    <script>
 
         // Datos enviados por Flask/Jinja
-        const labels = {{ labels | tojson }};
-        const values = {{ values | tojson }};
+        const labels_temperature = {{ labels_temperature | tojson }};
+        const values_temperature = {{ values_temperature | tojson }};
 
         // Canvas
         const ctx = document.getElementById('weatherChartTemperature');
@@ -112,10 +112,10 @@
         new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: labels,
+                labels: labels_temperature,
                 datasets: [{
-                    label: 'Ventas',
-                    data: values,
+                    label: 'Temperatura',
+                    data: values_temperature,
                     borderWidth: 1
                 }]
             },

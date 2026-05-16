@@ -80,7 +80,11 @@ def weatherreport(lat, lon):
             "precipitation": hourly.get("precipitation", [None])[0],
             "pressure": hourly.get("surface_pressure", [None])[0],
             "labels_temperature": [pd.to_datetime(t, unit="s").strftime("%H:%M") for t in times],
-            "values_temperature": hourly.get("temperature_2m", [])
+            "values_temperature": hourly.get("temperature_2m", []),
+            "labels_precipitation": [pd.to_datetime(t, unit="s").strftime("%H:%M") for t in times],
+            "values_precipitation": hourly.get("precipitation", []),
+            "labels_pressure": [pd.to_datetime(t, unit="s").strftime("%H:%M") for t in times],
+            "values_pressure": hourly.get("surface_pressure", [])
         }
 
     except Exception as e:
